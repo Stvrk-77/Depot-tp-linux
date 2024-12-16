@@ -425,19 +425,158 @@ echo "Sauvegarde créée : $BACKUP_FILE" >> "$LOG_FILE"
 1. **Configurer auditd pour surveiller `/etc`** :
    - Ajoutez une règle avec `auditctl` pour surveiller toutes les modifications dans `/etc`.
 
+   ```powershell
+
+   [root@vbox stark]# sudo nano /etc/audit/rules.d/audit.rules
+   (ligne ajouté dans le nano : -w /etc -p wa -k surveillance_etc)
+   
+    ```
+
 2. **Tester la surveillance** :
    - Créez ou modifiez un fichier dans `/etc` et vérifiez que l’événement est enregistré dans les logs d’audit.
-
+```powershell
+[root@vbox stark]# sudo touch /etc/test_auditd_file
+[root@vbox stark]# sudo chmod 600 /etc/test_auditd_file
+[root@vbox stark]# sudo ausearch -k surveillance_etc
+----
+time->Mon Nov 25 18:49:24 2024
+type=PROCTITLE msg=audit(1732556964.363:103): proctitle=617564697463746C002D77002F657463002D70007761002D6B007375727665696C6C616E63655F657463
+type=SYSCALL msg=audit(1732556964.363:103): arch=c000003e syscall=44 success=yes exit=1076 a0=4 a1=7fffc1e60fe0 a2=434 a3=0 items=0 ppid=1527 pid=1529 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="auditctl" exe="/usr/sbin/auditctl" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key=(null)
+type=CONFIG_CHANGE msg=audit(1732556964.363:103): auid=1001 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 op=add_rule key="surveillance_etc" list=4 res=1
+----
+time->Mon Nov 25 19:07:05 2024
+type=PROCTITLE msg=audit(1732558025.112:118): proctitle=6E616E6F002F6574632F61756469742F72756C65732E642F61756469742E72756C6573
+type=PATH msg=audit(1732558025.112:118): item=1 name="/etc/audit/rules.d/audit.rules" inode=28415 dev=fd:00 mode=0100600 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:auditd_etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558025.112:118): item=0 name="/etc/audit/rules.d/" inode=28325 dev=fd:00 mode=040750 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:auditd_etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558025.112:118): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558025.112:118): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=5573b4ebba00 a2=241 a3=1b6 items=2 ppid=1581 pid=1583 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="nano" exe="/usr/bin/nano" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:13:46 2024
+type=PROCTITLE msg=audit(1732558426.757:141): proctitle=746F756368002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558426.757:141): item=1 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=CREATE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558426.757:141): item=0 name="/etc/" inode=18 dev=fd:00 mode=040755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558426.757:141): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558426.757:141): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=7ffc6b7158e2 a2=941 a3=1b6 items=2 ppid=1614 pid=1616 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="touch" exe="/usr/bin/touch" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:13:55 2024
+type=PROCTITLE msg=audit(1732558435.381:154): proctitle=746F756368002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558435.381:154): item=1 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558435.381:154): item=0 name="/etc/" inode=18 dev=fd:00 mode=040755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558435.381:154): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558435.381:154): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=7ffff4ef58e2 a2=941 a3=1b6 items=2 ppid=1620 pid=1622 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="touch" exe="/usr/bin/touch" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:14:27 2024
+type=PROCTITLE msg=audit(1732558467.749:161): proctitle=63686D6F6400363030002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558467.749:161): item=0 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558467.749:161): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558467.749:161): arch=c000003e syscall=268 success=yes exit=0 a0=ffffff9c a1=5579fcbe6c50 a2=180 a3=0 items=1 ppid=1623 pid=1625 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="chmod" exe="/usr/bin/chmod" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+```
 3. **Analyser les événements** :
    - Recherchez les événements associés à la règle configurée et exportez les logs filtrés dans `/var/log/audit_etc.log`.
-
----
+```powershell
+[root@vbox stark]# sudo ausearch -k surveillance_etc > /var/log/audit_etc.log
+[root@vbox stark]# cat /var/log/audit_etc.log
+----
+time->Mon Nov 25 18:49:24 2024
+type=PROCTITLE msg=audit(1732556964.363:103): proctitle=617564697463746C002D77002F657463002D70007761002D6B007375727665696C6C616E63655F657463
+type=SYSCALL msg=audit(1732556964.363:103): arch=c000003e syscall=44 success=yes exit=1076 a0=4 a1=7fffc1e60fe0 a2=434 a3=0 items=0 ppid=1527 pid=1529 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="auditctl" exe="/usr/sbin/auditctl" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key=(null)
+type=CONFIG_CHANGE msg=audit(1732556964.363:103): auid=1001 ses=3 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 op=add_rule key="surveillance_etc" list=4 res=1
+----
+time->Mon Nov 25 19:07:05 2024
+type=PROCTITLE msg=audit(1732558025.112:118): proctitle=6E616E6F002F6574632F61756469742F72756C65732E642F61756469742E72756C6573
+type=PATH msg=audit(1732558025.112:118): item=1 name="/etc/audit/rules.d/audit.rules" inode=28415 dev=fd:00 mode=0100600 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:auditd_etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558025.112:118): item=0 name="/etc/audit/rules.d/" inode=28325 dev=fd:00 mode=040750 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:auditd_etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558025.112:118): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558025.112:118): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=5573b4ebba00 a2=241 a3=1b6 items=2 ppid=1581 pid=1583 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="nano" exe="/usr/bin/nano" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:13:46 2024
+type=PROCTITLE msg=audit(1732558426.757:141): proctitle=746F756368002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558426.757:141): item=1 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=CREATE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558426.757:141): item=0 name="/etc/" inode=18 dev=fd:00 mode=040755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558426.757:141): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558426.757:141): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=7ffc6b7158e2 a2=941 a3=1b6 items=2 ppid=1614 pid=1616 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="touch" exe="/usr/bin/touch" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:13:55 2024
+type=PROCTITLE msg=audit(1732558435.381:154): proctitle=746F756368002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558435.381:154): item=1 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1732558435.381:154): item=0 name="/etc/" inode=18 dev=fd:00 mode=040755 ouid=0 ogid=0 rdev=00:00 obj=system_u:object_r:etc_t:s0 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558435.381:154): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558435.381:154): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=7ffff4ef58e2 a2=941 a3=1b6 items=2 ppid=1620 pid=1622 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="touch" exe="/usr/bin/touch" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+----
+time->Mon Nov 25 19:14:27 2024
+type=PROCTITLE msg=audit(1732558467.749:161): proctitle=63686D6F6400363030002F6574632F746573745F6175646974645F66696C65
+type=PATH msg=audit(1732558467.749:161): item=0 name="/etc/test_auditd_file" inode=20772 dev=fd:00 mode=0100644 ouid=0 ogid=0 rdev=00:00 obj=unconfined_u:object_r:etc_t:s0 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1732558467.749:161): cwd="/home/stark"
+type=SYSCALL msg=audit(1732558467.749:161): arch=c000003e syscall=268 success=yes exit=0 a0=ffffff9c a1=5579fcbe6c50 a2=180 a3=0 items=1 ppid=1623 pid=1625 auid=1001 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts0 ses=3 comm="chmod" exe="/usr/bin/chmod" subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 key="surveillance_etc"
+```
 
 ## Étape 5 : Sécurisation avec Firewalld
 
 1. **Configurer un pare-feu pour SSH et HTTP/HTTPS uniquement** :
    - Autorisez uniquement les ports nécessaires pour SSH et HTTP/HTTPS.
    - Bloquez toutes les autres connexions.
+   ```powershell
+   [root@vbox stark]# sudo systemctl status firewalld
+● firewalld.service - firewalld - dynamic firewall daemon
+     Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2024-11-25 18:43:25 CET; 49min ago
+       Docs: man:firewalld(1)
+   Main PID: 850 (firewalld)
+      Tasks: 2 (limit: 48902)
+     Memory: 45.7M
+        CPU: 1.015s
+     CGroup: /system.slice/firewalld.service
+             └─850 /usr/bin/python3 -s /usr/sbin/firewalld --nofork --nopid
+
+Nov 25 18:43:24 localhost systemd[1]: Starting firewalld - dynamic firewall daemon...
+Nov 25 18:43:25 localhost systemd[1]: Started firewalld - dynamic firewall daemon.
+[root@vbox stark]# sudo firewall-cmd --permanent --add-service=ssh
+Warning: ALREADY_ENABLED: ssh
+success
+[root@vbox stark]# sudo firewall-cmd --permanent --add-service=http
+success
+[root@vbox stark]# sudo firewall-cmd --permanent --add-service=https
+Warning: ALREADY_ENABLED: https
+success
+[root@vbox stark]# sudo firewall-cmd --set-default-zone=drop
+success
+[root@vbox stark]# sudo firewall-cmd --reload
+success
+[root@vbox stark]# firewall-cmd --list-all
+drop (active)
+  target: DROP
+  icmp-block-inversion: no
+  interfaces: enp0s3 enp0s8
+  sources:
+  services:
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+[root@vbox stark]# sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.100" reject'
+success
+[root@vbox stark]# sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" reject'
+success
+[root@vbox stark]# sudo firewall-cmd --reload
+success
+[root@vbox stark]# sudo firewall-cmd --list-rich-rules
+rule family="ipv4" source address="192.168.1.0/24" reject
+rule family="ipv4" source address="192.168.1.100" reject
+[root@vbox stark]#  firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" service name="ssh" accept'                                                                                                     success
+[root@vbox stark]# firewall-cmd --permanent --add-rich-rule='rule family="ipv4" service name="ssh" reject'
+success
+[root@vbox stark]# sudo firewall-cmd --reload
+success
+[root@vbox stark]# sudo firewall-cmd --list-rich-rules
+rule family="ipv4" source address="192.168.1.0/24" service name="ssh" accept
+rule family="ipv4" source address="192.168.1.0/24" reject
+rule family="ipv4" source address="192.168.1.100" reject
+rule family="ipv4" service name="ssh" reject
+
 
 2. **Bloquer des IP suspectes** :
    - À l’aide des logs d’audit et des connexions réseau, bloquez les adresses IP malveillantes identifiées.
